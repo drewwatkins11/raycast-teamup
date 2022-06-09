@@ -1,6 +1,14 @@
-import { ActionPanel, List, Action, getPreferenceValues } from "@raycast/api";
+import {
+  ActionPanel,
+  List,
+  Action,
+  getPreferenceValues,
+  Icon,
+} from "@raycast/api";
 import { useEffect, useState } from "react";
 import got from "got";
+import { getColor } from "./colors";
+import { Room } from "./types";
 
 const times: TimeObject[] = [
   {
@@ -160,15 +168,19 @@ export default function Command() {
         />
       }
     >
-      {openRooms?.map((room: any) => (
+      {openRooms?.map((room: Room) => (
         <List.Item
-          key={room}
+          key={room.id}
           title={room.name}
+          icon={{
+            source: Icon.Calendar,
+            tintColor: room.color ? getColor(room.color) : undefined,
+          }}
           actions={
             <ActionPanel>
               <Action
                 title="Select"
-                onAction={() => console.log(`${room} selected`)}
+                onAction={() => console.log(`${room.name} selected`)}
               />
             </ActionPanel>
           }
