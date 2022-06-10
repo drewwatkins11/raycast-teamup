@@ -23,6 +23,13 @@
       "type": "textfield",
       "required": true,
       "title": "Teamup Calendar ID"
+    },
+    {
+      "name": "default_title",
+      "description": "This will be used when adding an event using Quick Add",
+      "type": "textfield",
+      "required": true,
+      "title": "Default Event Title"
     }
   ],
   "commands": [

@@ -4,6 +4,9 @@ import {
   Action,
   getPreferenceValues,
   Icon,
+  showHUD,
+  showToast,
+  Toast,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import got from "got";
@@ -55,6 +58,38 @@ const getCalendar = async (auth: GotConfig) => {
   return body;
 };
 
+const bookRoom = async (
+  auth: GotConfig,
+  roomId: Room["id"],
+  duration: number,
+  title: string,
+  start?: Date
+) => {
+  const start_dt = start || new Date();
+  const end_dt = new Date(start_dt.getTime() + duration * 60000);
+  const event = await got
+    .post(`${auth.apiRoot}/events`, {
+      headers: { ...auth.headers },
+      json: {
+        title,
+        start_dt: `${start_dt.toISOString().split(".")[0]}Z`,
+        end_dt: `${end_dt.toISOString().split(".")[0]}Z`,
+        subcalendar_ids: [roomId],
+      },
+    })
+    .then((res) => {
+      return JSON.parse(res.body);
+    })
+    .catch((err) => {
+      console.log(err);
+      return err;
+    });
+
+  console.log("event", event);
+
+  return event;
+};
+
 const getSubcalendars = async (auth: GotConfig) => {
   const { body } = await got(`${auth.apiRoot}/subcalendars`, {
     headers: { ...auth.headers },
@@ -96,9 +131,33 @@ export default function Command() {
   const startDt = new Date();
   const endDt = new Date(startDt.getTime() + minutes * 60000);
 
-  const { calendar, token } = getPreferenceValues<AuthValues>();
+  const {
+    calendar,
+    token,
+    default_title: defaultTitle,
+  } = getPreferenceValues<Preferences>();
 
   const auth = createAuth({ calendar, token });
+
+  const quickAddEvent = async (roomId: Room["id"]) => {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Booking room",
+    });
+
+    console.log("booking room");
+    const event: any = await bookRoom(auth, roomId, minutes, defaultTitle);
+
+    if (event?.code && event.code === "ERR_NON_2XX_3XX_RESPONSE") {
+      toast.style = Toast.Style.Failure;
+      toast.title = "Unable to book room";
+    }
+    if (event) {
+      toast.hide();
+      setOpenRooms(openRooms.filter((room: Room) => room.id !== roomId));
+      await showHUD("🗓️ Room booked");
+    }
+  };
 
   const loadRooms = async () => {
     let events: any;
@@ -179,8 +238,8 @@ export default function Command() {
           actions={
             <ActionPanel>
               <Action
-                title="Select"
-                onAction={() => console.log(`${room.name} selected`)}
+                title="Quick book"
+                onAction={() => quickAddEvent(room.id)}
               />
             </ActionPanel>
           }
@@ -193,6 +252,10 @@ export default function Command() {
 interface AuthValues {
   calendar: string;
   token: string;
+}
+
+interface Preferences extends AuthValues {
+  default_title: string;
 }
 
 interface GotConfig {
