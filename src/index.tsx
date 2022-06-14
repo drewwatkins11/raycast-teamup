@@ -126,7 +126,6 @@ export default function Command() {
   const [timeString, setTimeString] = useState<string>("30 minutes");
   const [minutesString, setMinutesString] = useState<string>("30");
   const [minutes, setMinutes] = useState<number>(30);
-  const [roomText, setRoomText] = useState("");
 
   const startDt = new Date();
   const endDt = new Date(startDt.getTime() + minutes * 60000);
@@ -193,20 +192,9 @@ export default function Command() {
   };
 
   useEffect(() => {
+    setOpenRooms(undefined);
     loadRooms();
   }, [minutes]);
-
-  useEffect(() => {
-    if (openRooms !== undefined) {
-      if (!openRooms.length) {
-        setRoomText("No rooms available");
-      } else if (openRooms.length === 1) {
-        setRoomText("One room is available");
-      } else {
-        setRoomText(`There are ${openRooms.length} rooms available.`);
-      }
-    } else console.log("rooms is undefined");
-  }, [openRooms]);
 
   useEffect(() => {
     if (!!minutesString) setMinutes(parseInt(minutesString));
@@ -227,24 +215,28 @@ export default function Command() {
         />
       }
     >
-      {openRooms?.map((room: Room) => (
-        <List.Item
-          key={room.id}
-          title={room.name}
-          icon={{
-            source: Icon.Calendar,
-            tintColor: room.color ? getColor(room.color) : undefined,
-          }}
-          actions={
-            <ActionPanel>
-              <Action
-                title="Quick book"
-                onAction={() => quickAddEvent(room.id)}
-              />
-            </ActionPanel>
-          }
-        />
-      ))}
+      {openRooms?.length === 0 ? (
+        <List.EmptyView title="No rooms are open" />
+      ) : (
+        openRooms?.map((room: Room) => (
+          <List.Item
+            key={room.id}
+            title={room.name}
+            icon={{
+              source: Icon.Calendar,
+              tintColor: room.color ? getColor(room.color) : undefined,
+            }}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="Quick book"
+                  onAction={() => quickAddEvent(room.id)}
+                />
+              </ActionPanel>
+            }
+          />
+        ))
+      )}
     </List>
   );
 }
