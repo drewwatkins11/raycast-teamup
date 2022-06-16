@@ -1,13 +1,4 @@
-import {
-  ActionPanel,
-  List,
-  Action,
-  getPreferenceValues,
-  Icon,
-  showHUD,
-  showToast,
-  Toast,
-} from "@raycast/api";
+import { ActionPanel, List, Action, getPreferenceValues, Icon, showHUD, showToast, Toast } from "@raycast/api";
 import { useEffect, useState } from "react";
 import got from "got";
 import { getColor } from "./colors";
@@ -56,13 +47,7 @@ const getCalendar = async (auth: GotConfig) => {
   return body;
 };
 
-const bookRoom = async (
-  auth: GotConfig,
-  roomId: Room["id"],
-  duration: number,
-  title: string,
-  start?: Date
-) => {
+const bookRoom = async (auth: GotConfig, roomId: Room["id"], duration: number, title: string, start?: Date) => {
   const start_dt = start || new Date();
   const end_dt = new Date(start_dt.getTime() + duration * 60000);
   const event = await got
@@ -79,10 +64,7 @@ const bookRoom = async (
       return JSON.parse(res.body);
     })
     .catch((err) => {
-      if (
-        err.code === "ERR_NON_2XX_3XX_RESPONSE" &&
-        JSON.parse(err.response?.body).error
-      ) {
+      if (err.code === "ERR_NON_2XX_3XX_RESPONSE" && JSON.parse(err.response?.body).error) {
         const { id, title } = JSON.parse(err.response?.body).error;
         return (() => {
           switch (id) {
@@ -131,11 +113,7 @@ function TimeDropdown(props: { onTimeChange: (x: TimeObject) => void }) {
       }}
     >
       {times.map((time) => (
-        <List.Dropdown.Item
-          key={time.minutes}
-          title={time.text}
-          value={time.minutes}
-        />
+        <List.Dropdown.Item key={time.minutes} title={time.text} value={time.minutes} />
       ))}
     </List.Dropdown>
   );
@@ -150,11 +128,7 @@ export default function Command() {
   const startDt = new Date();
   const endDt = new Date(startDt.getTime() + minutes * 60000);
 
-  const {
-    calendar,
-    token,
-    default_title: defaultTitle,
-  } = getPreferenceValues<Preferences>();
+  const { calendar, token, default_title: defaultTitle } = getPreferenceValues<Preferences>();
 
   const auth = createAuth({ calendar, token });
 
@@ -183,9 +157,7 @@ export default function Command() {
     const occupiedRooms: any = [];
 
     await getCalendar(auth).then((res) => (events = JSON.parse(res).events));
-    await getSubcalendars(auth).then(
-      (res) => (rooms = JSON.parse(res).subcalendars)
-    );
+    await getSubcalendars(auth).then((res) => (rooms = JSON.parse(res).subcalendars));
 
     events = events
       .map((event: any) => {
@@ -198,7 +170,7 @@ export default function Command() {
       .filter((event: any) => event.start_dt < endDt)
       .filter((event: any) => event.end_dt > startDt);
 
-    for (let ev in events) {
+    for (const ev in events) {
       occupiedRooms.push(events[ev].subcalendar_id);
     }
 
@@ -215,7 +187,7 @@ export default function Command() {
   }, [minutes]);
 
   useEffect(() => {
-    if (!!minutesString) setMinutes(parseInt(minutesString));
+    if (minutesString) setMinutes(parseInt(minutesString));
   }, [minutesString]);
 
   return (
@@ -248,10 +220,7 @@ export default function Command() {
             }}
             actions={
               <ActionPanel>
-                <Action
-                  title="Quick book"
-                  onAction={() => quickAddEvent(room.id)}
-                />
+                <Action title="Quick book" onAction={() => quickAddEvent(room.id)} />
               </ActionPanel>
             }
           />

@@ -3,7 +3,7 @@
   "name": "teamup-rooms",
   "title": "Teamup Rooms",
   "description": "Check for open rooms and book using Teamup",
-  "icon": "🗓️",
+  "icon": "command-icon.png",
   "author": "drewwatkins11",
   "categories": [
     "Productivity"
@@ -51,6 +51,8 @@
     "@typescript-eslint/parser": "^5.0.0",
     "eslint": "^7.32.0",
     "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-react": "^7.29.3",
+    "eslint-plugin-react-hooks": "^4.3.0",
     "prettier": "^2.5.1",
     "typescript": "^4.4.3"
   },
