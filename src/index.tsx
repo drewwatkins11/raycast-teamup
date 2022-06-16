@@ -53,8 +53,6 @@ const getCalendar = async (auth: GotConfig) => {
   const { body } = await got(`${auth.apiRoot}/events`, {
     headers: { ...auth.headers },
   });
-
-  console.log(body);
   return body;
 };
 
@@ -81,11 +79,34 @@ const bookRoom = async (
       return JSON.parse(res.body);
     })
     .catch((err) => {
-      console.log(err);
-      return err;
-    });
+      if (
+        err.code === "ERR_NON_2XX_3XX_RESPONSE" &&
+        JSON.parse(err.response?.body).error
+      ) {
+        const { id, title } = JSON.parse(err.response?.body).error;
+        return (() => {
+          switch (id) {
+            case "event_overlapping":
+              return {
+                error: {
+                  title: "Scheduling Conflict",
+                  message: "This room is already booked.",
+                },
+              };
 
-  console.log("event", event);
+            default:
+              return {
+                error: { title },
+              };
+          }
+        })();
+      } else
+        return {
+          error: {
+            title: "An unknown error has occured",
+          },
+        };
+    });
 
   return event;
 };
@@ -95,7 +116,6 @@ const getSubcalendars = async (auth: GotConfig) => {
     headers: { ...auth.headers },
   });
 
-  console.log(body);
   return body;
 };
 
@@ -144,14 +164,13 @@ export default function Command() {
       title: "Booking room",
     });
 
-    console.log("booking room");
     const event: any = await bookRoom(auth, roomId, minutes, defaultTitle);
 
-    if (event?.code && event.code === "ERR_NON_2XX_3XX_RESPONSE") {
+    if (event.error) {
       toast.style = Toast.Style.Failure;
-      toast.title = "Unable to book room";
-    }
-    if (event) {
+      toast.title = event.error.title;
+      toast.message = event.error.message;
+    } else {
       toast.hide();
       setOpenRooms(openRooms.filter((room: Room) => room.id !== roomId));
       await showHUD("🗓️ Room booked");
@@ -187,7 +206,6 @@ export default function Command() {
       return occupiedRooms.indexOf(room.id) === -1;
     });
 
-    console.log("got rooms", rooms);
     setOpenRooms(rooms);
   };
 
@@ -210,13 +228,15 @@ export default function Command() {
           onTimeChange={(time: TimeObject) => {
             setMinutesString(time.minutes);
             setTimeString(time.text);
-            console.log(time);
           }}
         />
       }
     >
       {openRooms?.length === 0 ? (
-        <List.EmptyView title="No rooms are open" />
+        <List.EmptyView
+          title="No rooms are open"
+          description="If your schedule permits, try checking for rooms available for a shorter amount of time."
+        />
       ) : (
         openRooms?.map((room: Room) => (
           <List.Item
